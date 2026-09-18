@@ -1,0 +1,113 @@
+{
+  "dataset": "sklearn wine (bundled as data/wine.csv)",
+  "random_seed": 42,
+  "split": "stratified 60/20/20 train/val/test",
+  "models_compared": [
+    "logistic_regression",
+    "mlp"
+  ],
+  "best_model": "logistic_regression",
+  "selection_criterion": "validation macro-F1",
+  "metrics": {
+    "logistic_regression": {
+      "val": {
+        "split": "logistic_regression / val",
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            14,
+            0
+          ],
+          [
+            0,
+            0,
+            10
+          ]
+        ]
+      },
+      "test": {
+        "split": "logistic_regression / test",
+        "accuracy": 0.9722222222222222,
+        "precision_macro": 0.9743589743589745,
+        "recall_macro": 0.9777777777777779,
+        "f1_macro": 0.9751724137931035,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            1,
+            14,
+            0
+          ],
+          [
+            0,
+            0,
+            9
+          ]
+        ]
+      }
+    },
+    "mlp": {
+      "val": {
+        "split": "mlp / val",
+        "accuracy": 0.9444444444444444,
+        "precision_macro": 0.9505494505494506,
+        "recall_macro": 0.942857142857143,
+        "f1_macro": 0.9453132832080201,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            1,
+            13,
+            0
+          ],
+          [
+            0,
+            1,
+            9
+          ]
+        ]
+      },
+      "test": {
+        "split": "mlp / test",
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            9
+          ]
+        ]
+      }
+    }
+  }
+}

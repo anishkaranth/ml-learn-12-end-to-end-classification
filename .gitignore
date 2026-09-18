@@ -28,3 +28,5 @@ credentials.json
 
 # Keep artifacts/.gitkeep; ignore heavy regenerable junk if any
 # (trained .joblib files ARE committed so clone+predict works)
+
+# results/ is intentionally tracked (RESULTS.md, metrics.json, plots)

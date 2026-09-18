@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -31,6 +32,7 @@ from sklearn.preprocessing import StandardScaler
 RANDOM_SEED = 42
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "wine.csv"
 ARTIFACTS_DIR = Path(__file__).resolve().parent.parent / "artifacts"
+RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 TARGET_COL = "target"
 
 
@@ -74,6 +76,138 @@ def metrics_bundle(y_true, y_pred, label: str) -> dict:
     print(f"  confusion matrix :\n{np.array(out['confusion_matrix'])}")
     print(classification_report(y_true, y_pred, digits=4, zero_division=0))
     return out
+
+
+def save_class_balance_plot(y: np.ndarray, out_path: Path) -> None:
+    counts = pd.Series(y).value_counts().sort_index()
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    ax.bar(counts.index.astype(str), counts.values, color=["#4C72B0", "#55A868", "#C44E52"])
+    ax.set_xlabel("Cultivar class")
+    ax.set_ylabel("Count")
+    ax.set_title("Wine class balance")
+    for i, v in enumerate(counts.values):
+        ax.text(i, v + 0.5, str(v), ha="center", va="bottom", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+
+
+def save_confusion_matrix_plot(cm: list, title: str, out_path: Path) -> None:
+    mat = np.asarray(cm)
+    fig, ax = plt.subplots(figsize=(4.5, 4))
+    im = ax.imshow(mat, cmap="Blues")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    ax.set_xticks(range(mat.shape[1]))
+    ax.set_yticks(range(mat.shape[0]))
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    ax.set_title(title)
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            ax.text(j, i, str(mat[i, j]), ha="center", va="center",
+                    color="white" if mat[i, j] > mat.max() / 2 else "black")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+
+
+def save_lr_coefficients_plot(model: LogisticRegression, feature_cols: list[str], out_path: Path) -> None:
+    # Mean absolute coefficient across classes as a simple importance proxy
+    coef = np.mean(np.abs(model.coef_), axis=0)
+    order = np.argsort(coef)
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    ax.barh(np.array(feature_cols)[order], coef[order], color="#4C72B0")
+    ax.set_xlabel("Mean |coefficient| across classes")
+    ax.set_title("LogisticRegression feature importance")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=120)
+    plt.close(fig)
+
+
+def write_results_package(
+    best_name: str,
+    results: dict,
+    feature_cols: list[str],
+    trained: dict,
+    y: np.ndarray,
+) -> None:
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    metrics_payload = {
+        "dataset": "sklearn wine (bundled as data/wine.csv)",
+        "random_seed": RANDOM_SEED,
+        "split": "stratified 60/20/20 train/val/test",
+        "models_compared": list(results.keys()),
+        "best_model": best_name,
+        "selection_criterion": "validation macro-F1",
+        "metrics": results,
+    }
+    metrics_path = RESULTS_DIR / "metrics.json"
+    metrics_path.write_text(json.dumps(metrics_payload, indent=2))
+
+    # Plots
+    save_class_balance_plot(y, RESULTS_DIR / "class_balance.png")
+    best_cm = results[best_name]["test"]["confusion_matrix"]
+    save_confusion_matrix_plot(
+        best_cm,
+        f"Confusion matrix — {best_name} (test)",
+        RESULTS_DIR / "confusion_matrix_test.png",
+    )
+    if "logistic_regression" in trained:
+        save_lr_coefficients_plot(
+            trained["logistic_regression"],
+            feature_cols,
+            RESULTS_DIR / "lr_coefficients.png",
+        )
+
+    best = results[best_name]
+    lines = [
+        "# Results — End-to-End Wine Classification",
+        "",
+        "## What was run",
+        "",
+        f"- **Dataset:** UCI Wine via `data/wine.csv` (178 rows, 13 features, 3 cultivar classes)",
+        f"- **Seed:** `{RANDOM_SEED}`",
+        f"- **Split:** stratified 60% / 20% / 20% train / val / test",
+        f"- **Preprocess:** `StandardScaler` fit on train only",
+        f"- **Models compared:** `logistic_regression`, `mlp` (hidden `(64, 32)`, `lbfgs`)",
+        f"- **Selection:** best by **validation macro-F1** → **`{best_name}`**",
+        "",
+        "## Headline metrics",
+        "",
+        f"| Model | Val Acc | Val macro-F1 | Test Acc | Test macro-F1 |",
+        f"|---|---:|---:|---:|---:|",
+    ]
+    for name, m in results.items():
+        mark = " **(selected)**" if name == best_name else ""
+        lines.append(
+            f"| `{name}`{mark} | {m['val']['accuracy']:.4f} | {m['val']['f1_macro']:.4f} "
+            f"| {m['test']['accuracy']:.4f} | {m['test']['f1_macro']:.4f} |"
+        )
+    lines += [
+        "",
+        f"**Selected model (`{best_name}`) test:** "
+        f"accuracy={best['test']['accuracy']:.4f}, "
+        f"macro-F1={best['test']['f1_macro']:.4f}, "
+        f"macro-P={best['test']['precision_macro']:.4f}, "
+        f"macro-R={best['test']['recall_macro']:.4f}",
+        "",
+        "## Plots",
+        "",
+        "- `class_balance.png` — target class counts",
+        "- `confusion_matrix_test.png` — test-set confusion matrix for the selected model",
+        "- `lr_coefficients.png` — mean |coef| feature importance for LogisticRegression",
+        "",
+        "## Files",
+        "",
+        "- `metrics.json` — structured per-model val/test metrics + best model name",
+        "",
+    ]
+    (RESULTS_DIR / "RESULTS.md").write_text("\n".join(lines))
+    print(f"Wrote {metrics_path}")
+    print(f"Wrote {RESULTS_DIR / 'RESULTS.md'}")
+    print(f"Wrote plots under {RESULTS_DIR}/")
+
 
 
 def main() -> None:
@@ -163,6 +297,9 @@ def main() -> None:
     print(f"\nWrote {model_path}")
     print(f"Wrote {scaler_path}")
     print(f"Wrote {meta_path}")
+
+    write_results_package(best_name, results, feature_cols, trained, y)
+
     print("\nDone. Run: python src/predict.py")
 
 
