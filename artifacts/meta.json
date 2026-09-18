@@ -1,0 +1,131 @@
+{
+  "best_model": "logistic_regression",
+  "random_seed": 42,
+  "feature_columns": [
+    "alcohol",
+    "malic_acid",
+    "ash",
+    "alcalinity_of_ash",
+    "magnesium",
+    "total_phenols",
+    "flavanoids",
+    "nonflavanoid_phenols",
+    "proanthocyanins",
+    "color_intensity",
+    "hue",
+    "od280/od315_of_diluted_wines",
+    "proline"
+  ],
+  "target_column": "target",
+  "class_labels": [
+    0,
+    1,
+    2
+  ],
+  "n_train": 106,
+  "n_val": 36,
+  "n_test": 36,
+  "metrics": {
+    "logistic_regression": {
+      "val": {
+        "split": "logistic_regression / val",
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            14,
+            0
+          ],
+          [
+            0,
+            0,
+            10
+          ]
+        ]
+      },
+      "test": {
+        "split": "logistic_regression / test",
+        "accuracy": 0.9722222222222222,
+        "precision_macro": 0.9743589743589745,
+        "recall_macro": 0.9777777777777779,
+        "f1_macro": 0.9751724137931035,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            1,
+            14,
+            0
+          ],
+          [
+            0,
+            0,
+            9
+          ]
+        ]
+      }
+    },
+    "mlp": {
+      "val": {
+        "split": "mlp / val",
+        "accuracy": 0.9444444444444444,
+        "precision_macro": 0.9505494505494506,
+        "recall_macro": 0.942857142857143,
+        "f1_macro": 0.9453132832080201,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            1,
+            13,
+            0
+          ],
+          [
+            0,
+            1,
+            9
+          ]
+        ]
+      },
+      "test": {
+        "split": "mlp / test",
+        "accuracy": 1.0,
+        "precision_macro": 1.0,
+        "recall_macro": 1.0,
+        "f1_macro": 1.0,
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            0,
+            15,
+            0
+          ],
+          [
+            0,
+            0,
+            9
+          ]
+        ]
+      }
+    }
+  },
+  "dataset": "sklearn wine (bundled as data/wine.csv)"
+}
